@@ -24,4 +24,10 @@ class RecipeDataService {
     deleteAll() {
         return httpCommon.delete(`/recipes`);
     }
+
+    findByTitle(title) {
+        return httpCommon.get(`/recipes?title=${title}`);
+    }
 }
+
+export default new RecipeDataService();

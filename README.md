@@ -2,4 +2,4 @@
 recipe sharing network using springboot 
 
 # run Vite
-```npm rin dev```
+```npm run dev```

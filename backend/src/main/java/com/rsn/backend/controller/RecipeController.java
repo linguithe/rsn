@@ -1,76 +1,70 @@
 package com.rsn.backend.controller;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.rsn.backend.model.Recipe;
-import com.rsn.backend.repo.RecipeRepo;
-
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
 
+import com.rsn.backend.service.RecipeService;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import com.rsn.backend.model.Recipe;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
 @RequestMapping("/api")
 public class RecipeController {
+
     @Autowired
-    RecipeRepo recipeRepo;
+    RecipeService recipeService;
 
     @GetMapping("/recipes")
-    public ResponseEntity<List<Recipe>> getAllRecipes(@RequestParam(required = false) String title) {
-        List<Recipe> recipes = new ArrayList<Recipe>();
+    @ResponseStatus(HttpStatus.OK)
+    public Flux<Recipe> getAllRecipes(@RequestParam(required = false) String title) {
         if (title == null) {
-            recipeRepo.findAll().forEach(recipes::add);
+            return recipeService.findAll();
         } else {
-            recipeRepo.findByTitle(title).forEach(recipes::add);
+            return recipeService.findByTitleContaining(title);
         }
-        return ResponseEntity.ok(recipes);
     }
 
     @GetMapping("/recipes/{id}")
-    public ResponseEntity<Recipe> getRecipeById(@PathVariable("id") long id) {
-        Recipe recipe = recipeRepo.findById(id).get();
-        return ResponseEntity.ok(recipe);
-    }
-
-    @GetMapping("recipes/{ingredient}")
-    public ResponseEntity<List<Recipe>> getRecipesByIngredient(@PathVariable("ingredient") String ingredient) {
-        List<Recipe> recipes = new ArrayList<Recipe>();
-        recipeRepo.findByIngredients(ingredient).forEach(recipes::add);
-        return ResponseEntity.ok(recipes);
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<Recipe> getRecipeById(@PathVariable int id) {
+        return recipeService.findById(id);
     }
 
     @PostMapping("/recipes")
-    public ResponseEntity<Recipe> createRecipe(@RequestBody Recipe recipe) {
-        
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<Recipe> createRecipe(@PathVariable int id, @RequestBody Recipe recipe) {
+        return recipeService.save(recipe);
     }
 
-    @PutMapping("/recipes/{id}")
-    public ResponseEntity<Recipe> updateRecipe(@PathVariable("id") long id, @RequestBody Recipe recipe) {
-        
+    @PostMapping("/recipes/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<Recipe> updateRecipe(@PathVariable int id, @RequestBody Recipe recipe) {
+        return recipeService.update(id, recipe);
     }
 
-    @DeleteMapping("/recipes")
-    public ResponseEntity<HttpStatus> deleteAllRecipes() {
-        
+    @PostMapping("/recipes/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteRecipe(@PathVariable int id) {
+        return recipeService.delete(id);
     }
 
-    @DeleteMapping("/recipes/{id}")
-    public ResponseEntity<HttpStatus> deleteRecipe(@PathVariable("id") long id) {
-        
+    @PostMapping("/recipes")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteAllRecipes() {
+        return recipeService.deleteAll();
     }
-       
 }
